@@ -35,17 +35,16 @@ def parse_name_config(s: str):
         "unknown": "common"
     }
 
-    if ";" in s:
-        for part in s.split(";"):
-            k, v = part.split("=")
-            out[k] = v.split(",")
+    if "," in s:
+        for part in s.split(","):
+            k, v = part.split(":")
+            out[k] = v.split(".")
     else:
         out = {
             "male": [s],
             "female": [s],
             "unknown": [s]
         }
-    
     return out
 
 
@@ -71,7 +70,7 @@ def generate_gender_paired_name_assignments(
     male_first_names = [(cat, n) for cat in name_sources["male"] for n in names.sample_first_names(NameGender.MALE, cat, half_gendered_entity_cnt)]
     female_first_names = [(cat, n) for cat in name_sources["female"] for n in names.sample_first_names(NameGender.FEMALE, cat, half_gendered_entity_cnt)]
 
-    if replace_last_names:
+    if replace_last_names: 
         male_last_names = [(cat, n) for cat in name_sources["male"] for n in names.sample_last_names(cat, half_gendered_entity_cnt)]
         random.shuffle(male_last_names)
         female_last_names = [(cat, n) for cat in name_sources["female"] for n in names.sample_last_names(cat, half_gendered_entity_cnt)]
@@ -79,7 +78,7 @@ def generate_gender_paired_name_assignments(
         non_gendered_last_names = [(cat, n) for cat in name_sources["unknown"] for n in names.sample_last_names(cat, len(template.replaceable_entities) - len(gendered_entities))]
         random.shuffle(non_gendered_last_names)
 
-    for pair_idx in (NameGender.FEMALE, NameGender.MALE):
+    for pair_idx in (0, 1):
         instructions = {}
 
         male_first_names_iter = iter(male_first_names)
@@ -94,7 +93,7 @@ def generate_gender_paired_name_assignments(
             gender_assignment_iter = iter(["m" if v == "f" else "f" for v in gender_assignment])
         else:
             gender_assignment_iter = iter(gender_assignment)
-
+        
         for entity in template.replaceable_entities:
             entity_gender = None
             first_name = None
@@ -233,34 +232,37 @@ if __name__ == "__main__":
         if len(gendered_entities) == 0:
             continue
 
-        total += 1
 
-        for sample_idx in range(n_samples_per_article):
-            if args.gender == "balanced":
-                for pair_id, instructions in enumerate(generate_gender_paired_name_assignments(template, name_generator, replace_last_names=args.names == "first_last", name_sources=args.name_sources)):
-                    text = format_text(template.fill_with_entities(instructions))
-                    all_samples.append(
-                        {
-                            "text": text,
-                            "instructions": {k: i.asdict() for k, i in instructions.items()},
-                            "sample_id": sample_idx,
-                            "article_id": file_obj.name,
-                            "pair_id": pair_id,
-                        }
-                    )
-            elif args.gender == "mono":
-                for gender in [NameGender.MALE, NameGender.FEMALE]:
-                    instructions = generate_single_gender_name_assignments(template, name_generator, gender, replace_last_names=args.names == "first_last", name_sources=args.name_sources)
-                    text = format_text(template.fill_with_entities(instructions))
-                    all_samples.append(
-                        {
-                            "text": text,
-                            "instructions": {k: i.asdict() for k, i in instructions.items()},
-                            "sample_id": sample_idx,
-                            "article_id": file_obj.name,
-                            "text_gender": gender.value
-                        }
-                    )
+        try:
+            for sample_idx in range(n_samples_per_article):
+                if args.gender == "balanced":
+                    for pair_id, instructions in enumerate(generate_gender_paired_name_assignments(template, name_generator, replace_last_names=args.names == "first_last", name_sources=args.name_sources)):
+                        text = format_text(template.fill_with_entities(instructions))
+                        all_samples.append(
+                            {
+                                "text": text,
+                                "instructions": {k: i.asdict() for k, i in instructions.items()},
+                                "sample_id": sample_idx,
+                                "article_id": file_obj.name,
+                                "pair_id": pair_id,
+                            }
+                        )
+                elif args.gender == "mono":
+                    for gender in [NameGender.MALE, NameGender.FEMALE]:
+                        instructions = generate_single_gender_name_assignments(template, name_generator, gender, replace_last_names=args.names == "first_last", name_sources=args.name_sources)
+                        text = format_text(template.fill_with_entities(instructions))
+                        all_samples.append(
+                            {
+                                "text": text,
+                                "instructions": {k: i.asdict() for k, i in instructions.items()},
+                                "sample_id": sample_idx,
+                                "article_id": file_obj.name,
+                                "text_gender": gender.value
+                            }
+                        )
+            total += 1
+        except:
+            print("Skipping", file_obj.name, "due to insufficient name inventory")
 
     
     name = name_from_args(args)
