@@ -12,8 +12,8 @@ from pathlib import Path
 
 
 class NameGender(enum.Enum):
-    MALE = "male"
     FEMALE = "female"
+    MALE = "male"
 
 class BBQNameGeneratorFactory:
     def __init__(self, bbq_path: str = Path("data/vocabulary_proper_names.csv"), census_extend_path=Path("data/"), surnames_path=Path("data/Names_2010Census.csv")) -> None:

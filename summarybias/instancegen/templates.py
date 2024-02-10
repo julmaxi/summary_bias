@@ -68,9 +68,12 @@ class ReplaceTemplate:
     text: str
     replaceable_entities: list["ReplaceableEntity"]
 
-    def fill_with_entities(self, replace_map) -> str:
+    def fill_with_entities(self, replace_map, no_pronouns: bool = False) -> str:
         all_mentions = [(mention.start, mention.end, entity_idx, entity, mention) for (entity_idx, entity) in enumerate(self.replaceable_entities) for mention in entity.mentions]
         all_mentions.sort(reverse=True)
+
+        if no_pronouns:
+            all_mentions = [m for m in all_mentions if m[4].category not in [MentionCategory.PRONOUN_3P_NOM, MentionCategory.PRONOUN_3P_POSS, MentionCategory.PRONOUN_3P_INDIR, MentionCategory.PRONOUN_3P_REFL]]
     
         out = []
         text_iter = iter(self.text)
@@ -317,7 +320,8 @@ class ReplaceTemplate:
         replaceable_entities = []
         for chain_id, chain in relevant_chains.items():
             entity = ReplaceTemplate.chain_to_replaceable_entity(onto_file, chain, chain_id)
-            replaceable_entities.append(entity)
+            if len(entity.mentions) > 0:
+                replaceable_entities.append(entity)
         return ReplaceTemplate(
             text=" ".join(onto_file.toks),
             replaceable_entities=replaceable_entities
@@ -336,7 +340,8 @@ class ReplaceInstruction:
     last_name: str
     gender: NameGender
 
-    markers: dict[str, str]
+    entity_category: str
+    is_modified: bool
 
     def realization_for_category(self, category: MentionCategory, original_text, **kwargs):
         def get_val():
@@ -392,6 +397,30 @@ class ReplaceInstruction:
         d = asdict(self)
         d["gender"] = d["gender"].value if d["gender"] is not None else None
         return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "ReplaceInstruction":
+        return cls(
+            first_name=d.get("first_name"),
+            last_name=d.get("last_name"),
+            gender=cls.parse_gender(d.get("gender")),
+            entity_category=d.get("entity_category"),
+            is_modified=d.get("is_modified")
+        )
+
+    @classmethod
+    def parse_gender(cls, s: str) -> NameGender:
+        if s is None:
+            return None
+        
+        if s == "female":
+            return NameGender.FEMALE
+        elif s == "male":
+            return NameGender.MALE
+        
+        raise ValueError(f"Invalid gender {s}")
+    
+        
 
 
 class PlaceholderFiller:
