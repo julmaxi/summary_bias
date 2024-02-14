@@ -1,6 +1,4 @@
-# Code for the paper _Investigating Gender Bias in News Summarization_
-
-This repository currently only contains the code for template generation.
+# Code for the paper _Gender Bias in News Summarization: Measures, Pitfalls and Corpora_
 
 ## Generating input
 
