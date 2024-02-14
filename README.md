@@ -1,5 +1,9 @@
 # Code for the paper _Gender Bias in News Summarization: Measures, Pitfalls and Corpora_
 
+## Obtaining Ontonotes
+
+Due to the license of [OntoNotes](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjcs5KYj6uEAxXIh_0HHSvQDMQQFnoECBQQAQ&url=https%3A%2F%2Fcatalog.ldc.upenn.edu%2FLDC2013T19&usg=AOvVaw2ACE0tDhYedJ_nP8we1HPi&opi=89978449), we can provide neither complete templates, nor generated summaries which might contain verbatim copies of input documents. However, we provide code to reproduce our experiments if you have access to OntoNotes data.
+
 ## Generating input
 
 Download the proper names from the [BBQ repository](https://github.com/nyu-mll/BBQ/blob/main/templates/vocabulary_proper_names.csv) and put them in ``data/``.
